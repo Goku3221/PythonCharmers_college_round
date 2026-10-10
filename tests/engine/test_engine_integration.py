@@ -97,10 +97,20 @@ class TestEngineIntegration(unittest.TestCase):
         self.assertEqual(eval_result.verdict, Verdict.EFFECTIVE)
 
     def test_sandbox_manager_fallback(self):
+        # Force fallback emulation mode by passing empty api_key
+        manager = E2BSandboxManager(api_key="")
+        res = manager.execute_code("print('Hello from sandbox!')")
+        self.assertIsNotNone(res.stdout)
+        self.assertIn("Sandbox Emulation", res.stdout)
+        self.assertLess(res.duration, 1.0)
+
+    def test_sandbox_manager_execution(self):
+        # Tests execution with whatever configuration is active (live or fallback)
         manager = E2BSandboxManager()
         res = manager.execute_code("print('Hello from sandbox!')")
         self.assertIsNotNone(res.stdout)
-        self.assertLess(res.duration, 1.0)
+        self.assertGreater(len(res.stdout), 0)
+
 
 
 if __name__ == "__main__":

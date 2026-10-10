@@ -33,7 +33,7 @@ class E2BSandboxManager:
     """Manages isolated cloud sandbox sessions for executing agent-generated code."""
 
     def __init__(self, api_key: str | None = None):
-        self.api_key = api_key or os.getenv("E2B_API_KEY")
+        self.api_key = os.getenv("E2B_API_KEY") if api_key is None else api_key
 
     def execute_code(self, code: str, timeout: int = 15) -> SandboxExecutionResult:
         """
@@ -53,7 +53,13 @@ class E2BSandboxManager:
         try:
             from e2b_code_interpreter import Sandbox  # type: ignore
 
-            with Sandbox(api_key=self.api_key, timeout=timeout) as sandbox:
+            # Modern E2B v1 SDK uses Sandbox.create()
+            if hasattr(Sandbox, "create"):
+                sandbox = Sandbox.create(api_key=self.api_key, timeout=timeout)
+            else:
+                sandbox = Sandbox(api_key=self.api_key, timeout=timeout)
+
+            try:
                 execution = sandbox.run_code(code)
                 duration = time.time() - start_time
 
@@ -67,6 +73,9 @@ class E2BSandboxManager:
                     error=error_msg,
                     duration=duration,
                 )
+            finally:
+                if hasattr(sandbox, "kill"):
+                    sandbox.kill()
 
         except Exception as e:
             duration = time.time() - start_time

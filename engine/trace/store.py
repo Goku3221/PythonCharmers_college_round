@@ -54,6 +54,12 @@ class SQLiteTraceStore:
 
     def save(self, trace: AttackTrace) -> None:
         """Saves or updates an AttackTrace."""
+        try:
+            from engine.trace.sink import push_trace_to_langfuse
+            push_trace_to_langfuse(trace)
+        except Exception:
+            pass
+
         raw_json = trace.model_dump_json()
         with self._connection() as conn:
             conn.execute(
