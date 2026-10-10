@@ -95,9 +95,13 @@ export function SpanTree({ steps }: { steps: TraceStep[] }) {
                   <span
                     style={{
                       fontFamily: 'var(--font-mono)',
-                      fontSize: '12px',
-                      color: '#00f2fe',
+                      fontSize: '12.5px',
+                      color: '#06b6d4',
                       fontWeight: 600,
+                      background: 'rgba(6, 182, 212, 0.1)',
+                      padding: '2px 8px',
+                      borderRadius: '4px',
+                      border: '1px solid rgba(6, 182, 212, 0.25)',
                     }}
                   >
                     {step.tool_name}()
@@ -108,14 +112,19 @@ export function SpanTree({ steps }: { steps: TraceStep[] }) {
                   <span
                     style={{
                       fontSize: '11px',
-                      padding: '2px 8px',
-                      borderRadius: '4px',
-                      backgroundColor: 'rgba(244, 63, 94, 0.25)',
-                      color: '#f43f5e',
+                      padding: '2px 10px',
+                      borderRadius: '9999px',
+                      backgroundColor: 'rgba(244, 63, 94, 0.2)',
+                      color: '#fb7185',
                       fontWeight: 700,
+                      border: '1px solid rgba(244, 63, 94, 0.4)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px',
                     }}
                   >
-                    🚨 VIOLATION
+                    <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#f43f5e', boxShadow: '0 0 6px #f43f5e' }} />
+                    VIOLATION DETECTED
                   </span>
                 )}
               </div>
@@ -123,8 +132,17 @@ export function SpanTree({ steps }: { steps: TraceStep[] }) {
               {/* Progress & Toggle */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                 {step.partial_score !== null && step.partial_score !== undefined && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ fontSize: '11px', color: '#94a3b8' }}>Score:</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '11px', color: '#9ca3af' }}>Ladder:</span>
+                    <div style={{ width: '48px', height: '6px', borderRadius: '3px', background: 'rgba(255, 255, 255, 0.1)', overflow: 'hidden' }}>
+                      <div
+                        style={{
+                          width: `${scorePercentage}%`,
+                          height: '100%',
+                          background: scorePercentage === 100 ? '#f43f5e' : 'linear-gradient(90deg, #06b6d4, #10b981)',
+                        }}
+                      />
+                    </div>
                     <span
                       style={{
                         fontFamily: 'var(--font-mono)',
