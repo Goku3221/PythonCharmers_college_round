@@ -31,7 +31,7 @@ from contracts.schemas import AttackOutcome, AttackTrace, TraceStep
 
 logger = logging.getLogger(__name__)
 
-_SEEDS_TRACES_DIR = Path(__file__).resolve().parents[3] / "seeds" / "traces"
+_SEEDS_TRACES_DIR = Path(__file__).resolve().parents[2] / "seeds" / "traces"
 
 # ---------------------------------------------------------------------------
 # Synthetic poison documents (used when live ChromaDB is unavailable)

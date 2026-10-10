@@ -24,7 +24,7 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 # Default checkpoint directory (relative to project root)
-_DEFAULT_DIR = Path(__file__).resolve().parents[3] / "seeds" / "tap_checkpoints"
+_DEFAULT_DIR = Path(__file__).resolve().parents[2] / "seeds" / "tap_checkpoints"
 
 
 @dataclass

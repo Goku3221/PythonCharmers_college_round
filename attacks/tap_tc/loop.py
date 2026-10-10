@@ -94,9 +94,63 @@ class TAPTCAttacker:
         state.live_nodes = [root_node]
         state.all_nodes = [root_node]
 
+        return self._execute_search(
+            state=state,
+            start_depth=1,
+            max_depth=max_depth,
+            budget=budget,
+            checkpoint_name=self._checkpoint_name,
+        )
+
+    def resume(self, checkpoint_path: str, depth_remaining: int = 1) -> list[AttackTrace]:
+        """
+        Resume a TAP-TC run from a checkpoint file.
+
+        Parameters
+        ----------
+        checkpoint_path:
+            Path to the .pkl checkpoint file (or just the name without extension).
+        depth_remaining:
+            How many additional depth levels to run.
+        """
+        import os
+        name = os.path.splitext(os.path.basename(checkpoint_path))[0]
+
+        state = self._ckpt.load(name)
+        start_depth = state.depth_reached + 1
+        max_depth = state.depth_reached + depth_remaining
+        logger.info(
+            "Resuming from checkpoint '%s' at depth %d with %d live nodes (target max_depth=%d).",
+            name,
+            state.depth_reached,
+            len(state.live_nodes),
+            max_depth,
+        )
+
+        return self._execute_search(
+            state=state,
+            start_depth=start_depth,
+            max_depth=max_depth,
+            budget=state.budget_consumed + (depth_remaining * _N_VARIANTS * max(1, len(state.live_nodes))),
+            checkpoint_name=name,
+        )
+
+    # ------------------------------------------------------------------
+    # Private search execution
+    # ------------------------------------------------------------------
+
+    def _execute_search(
+        self,
+        state: CheckpointState,
+        start_depth: int,
+        max_depth: int,
+        budget: int,
+        checkpoint_name: str | None = None,
+    ) -> list[AttackTrace]:
+        ckpt_name = checkpoint_name or self._checkpoint_name
         all_traces: list[AttackTrace] = []
 
-        for depth in range(1, max_depth + 1):
+        for depth in range(start_depth, max_depth + 1):
             if state.budget_consumed >= budget:
                 logger.info("Budget exhausted at depth %d — stopping.", depth)
                 break
@@ -120,8 +174,8 @@ class TAPTCAttacker:
 
                 variants = self._generator.generate(
                     seed_payload=parent_node.payload,
-                    target_tool=target_tool,
-                    target_args=target_args,
+                    target_tool=state.target_tool,
+                    target_args=state.target_args,
                     depth=depth,
                 )
 
@@ -129,11 +183,11 @@ class TAPTCAttacker:
                     if state.budget_consumed >= budget:
                         break
 
-                    trace = self._run_variant(variant_payload, target_tool)
+                    trace = self._run_variant(variant_payload, state.target_tool)
                     state.budget_consumed += 1
                     all_traces.append(trace)
 
-                    score = partial_score(trace, target_tool, target_args)
+                    score = partial_score(trace, state.target_tool, state.target_args)
                     strategy = variant_payload.get("_strategy", "unknown")
                     node = TreeNode(
                         node_id=str(uuid.uuid4()),
@@ -158,7 +212,7 @@ class TAPTCAttacker:
                         logger.info("SUCCESS at depth %d! trace=%s", depth, trace.trace_id)
                         # Checkpoint and return immediately on success
                         state.depth_reached = depth
-                        self._ckpt.save(state, self._checkpoint_name)
+                        self._ckpt.save(state, ckpt_name)
                         return all_traces
 
                     candidates.append((node, trace, score))
@@ -168,7 +222,7 @@ class TAPTCAttacker:
             state.depth_reached = depth
 
             # Checkpoint after every depth level
-            self._ckpt.save(state, self._checkpoint_name)
+            self._ckpt.save(state, ckpt_name)
 
             logger.info(
                 "Depth %d done: kept %d live nodes after pruning.",
@@ -177,37 +231,6 @@ class TAPTCAttacker:
             )
 
         return all_traces
-
-    def resume(self, checkpoint_path: str, depth_remaining: int = 1) -> list[AttackTrace]:
-        """
-        Resume a TAP-TC run from a checkpoint file.
-
-        Parameters
-        ----------
-        checkpoint_path:
-            Path to the .pkl checkpoint file (or just the name without extension).
-        depth_remaining:
-            How many additional depth levels to run.
-        """
-        # Accept full path or bare name
-        import os
-        name = os.path.splitext(os.path.basename(checkpoint_path))[0]
-
-        state = self._ckpt.load(name)
-        logger.info(
-            "Resuming from checkpoint '%s' at depth %d with %d live nodes.",
-            name,
-            state.depth_reached,
-            len(state.live_nodes),
-        )
-
-        return self.run(
-            seed_payload=state.root_payload,
-            target_tool=state.target_tool,
-            target_args=state.target_args,
-            max_depth=state.depth_reached + depth_remaining,
-            budget=50 - state.budget_consumed,
-        )
 
     # ------------------------------------------------------------------
     # Private helpers

