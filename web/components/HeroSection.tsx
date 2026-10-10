@@ -499,35 +499,34 @@ export function HeroSection({ onScrollToStack }: { onScrollToStack?: () => void 
             margin: '0 0 18px 0',
           }}
         >
-          Unified Security
+          Autonomous Agent
           <br />
           <span style={{ fontStyle: 'italic', fontWeight: 400, color: '#ffffff' }}>
-            Intelligence
+            Red Teaming
           </span>
         </h1>
 
-        {/* Subtitle Paragraph matching exact reference copy */}
+        {/* Subtitle Paragraph matching problem statement */}
         <p
           style={{
             fontSize: 'clamp(14px, 1.5vw, 15.5px)',
             color: '#9ca3af',
             lineHeight: 1.68,
-            maxWidth: '650px',
+            maxWidth: '660px',
             margin: '0 0 32px 0',
             fontWeight: 400,
           }}
         >
-          Cyvance seamlessly integrates every component of your digital ecosystem, linking servers,
-          cloud platforms, applications, and endpoints. This innovative approach transforms disjointed
-          signals into a cohesive, intelligent defense network, enhancing security posture & ensuring
-          that all parts of your system work together effectively.
+          AgentBreak autonomously discovers multi-stage tool-use vulnerabilities across AI agent runtimes,
+          evaluating defense efficacy under adaptive pressure. By simulating complex execution paths across
+          sandboxes, APIs, and cloud services, it guarantees reproducible attack traces and exposes silent failure modes.
         </p>
 
         {/* Single Primary CTA Button */}
         <div>
           <button
             onClick={onScrollToStack}
-            id="hero-btn-get-started"
+            id="hero-btn-view-more"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -552,7 +551,7 @@ export function HeroSection({ onScrollToStack }: { onScrollToStack?: () => void 
               e.currentTarget.style.boxShadow = '0 0 30px rgba(45, 212, 191, 0.45)';
             }}
           >
-            <span>Get Started Now</span>
+            <span>View More</span>
             <span style={{ fontSize: '14px', fontWeight: 900 }}>✦</span>
           </button>
         </div>
