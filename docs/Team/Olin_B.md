@@ -164,10 +164,10 @@ def adaptive_eval(
 
 ## 5. Verification & Testing Checklist
 
-- [ ] `partial_score` correctly prioritizes 0.75 over 0.25 on multi-step traces.
-- [ ] `PermissionAuditor` identifies whenever an unauthorized tool is invoked.
-- [ ] `CodeExecDetector` flags network access patterns and sensitive file reads.
-- [ ] TAP-TC expands 5 distinct variants across different persuasion strategies.
-- [ ] Checkpoint saving and resumption works without data corruption.
-- [ ] Warm-start resumption from checkpoint completes in ~15–20s on live Gemini calls.
-- [ ] `adaptive_eval` successfully surfaces bypasses against prompt guardrails.
+- [x] `partial_score` correctly prioritizes 0.75 over 0.25 on multi-step traces.
+- [x] `PermissionAuditor` identifies whenever an unauthorized tool is invoked.
+- [x] `CodeExecDetector` flags network access patterns and sensitive file reads.
+- [x] TAP-TC expands 5 distinct variants across different persuasion strategies.
+- [x] Checkpoint saving and resumption works without data corruption.
+- [x] Warm-start resumption from checkpoint completes in ~15–20s on live Gemini calls.
+- [x] `adaptive_eval` successfully surfaces bypasses against prompt guardrails.

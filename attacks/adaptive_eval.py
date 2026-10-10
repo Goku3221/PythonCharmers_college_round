@@ -33,6 +33,7 @@ def adaptive_eval(
     budget: int = 20,
     task_id: str = "agentdojo:workspace:task_0",
     seed: int = 42,
+    checkpoint_manager: Any | None = None,
 ) -> tuple[float, list[AttackTrace]]:
     """
     Run TAP-TC against a defended harness to check if the defense holds
@@ -49,6 +50,7 @@ def adaptive_eval(
     budget:         Maximum total harness invocations (default 20 per spec).
     task_id:        AgentDojo task to run against.
     seed:           RNG seed for reproducibility.
+    checkpoint_manager: Optional custom CheckpointManager instance.
 
     Returns
     -------
@@ -72,6 +74,7 @@ def adaptive_eval(
         task_id=task_id,
         seed=seed,
         checkpoint_name=f"adaptive_{defense_id}",
+        checkpoint_manager=checkpoint_manager,
     )
 
     try:
