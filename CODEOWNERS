@@ -1,0 +1,25 @@
+# AgentBreak CODEOWNERS
+# Ownership mapping for hackathon clash prevention
+
+# Person A: Engine & Sandbox
+/engine/                    @person-a
+/contracts/                 @person-a
+/requirements/engine.txt    @person-a
+/tests/engine/              @person-a
+/.env.example               @person-a
+
+# Person B: Attacks & Autonomous Red Team
+/attacks/                   @person-b
+/seeds/                     @person-b
+/requirements/attacks.txt   @person-b
+/tests/attacks/             @person-b
+
+# Person C: Product, API & Dashboard
+/api/                       @person-c
+/web/                       @person-c
+/fixtures/                  @person-c
+/requirements/api.txt       @person-c
+/tests/api/                 @person-c
+/docs/                      @person-c
+/README.md                  @person-c
+/Makefile                   @person-c
