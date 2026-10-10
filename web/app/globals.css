@@ -1,0 +1,126 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap');
+
+:root {
+  --bg-pure-black: #000000;
+  --bg-obsidian: #040508;
+  --bg-surface: #0a0d14;
+  --bg-surface-elevated: #111522;
+  --bg-card: rgba(14, 18, 28, 0.7);
+
+  --border-subtle: rgba(255, 255, 255, 0.07);
+  --border-medium: rgba(255, 255, 255, 0.12);
+  --border-highlight: rgba(255, 107, 0, 0.4);
+
+  --text-white: #ffffff;
+  --text-silver: #d4d4d8;
+  --text-muted: #71717a;
+  --text-dim: #52525b;
+
+  /* Attention Grabber Orange Palette (CoreSpeed aesthetic) */
+  --orange-neon: #ff6b00;
+  --orange-bright: #ff8522;
+  --orange-glow: rgba(255, 107, 0, 0.35);
+  --orange-subtle: rgba(255, 107, 0, 0.12);
+
+  /* Status Colors */
+  --emerald-live: #10b981;
+  --emerald-glow: rgba(16, 185, 129, 0.35);
+  --crimson-breach: #ef4444;
+  --crimson-glow: rgba(239, 68, 68, 0.45);
+  --amber-warning: #f59e0b;
+  --cyan-accent: #00f2fe;
+
+  --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-serif: 'Newsreader', serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  background-color: var(--bg-pure-black);
+}
+
+body {
+  background-color: var(--bg-pure-black);
+  color: var(--text-white);
+  font-family: var(--font-heading);
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background 0.5s ease;
+}
+
+/* Silent Red Global Ambient Alert State */
+body.silent-red-active {
+  background: radial-gradient(circle at 50% 35%, rgba(239, 68, 68, 0.14) 0%, rgba(10, 0, 2, 0.98) 65%, #000000 100%);
+}
+
+/* 3D Glass Slab */
+.glass-slab {
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-slab:hover {
+  border-color: var(--border-medium);
+  transform: translateY(-2px);
+}
+
+/* Perspective Grid Canvas */
+.perspective-grid {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2000px;
+  height: 2000px;
+  transform: translate(-50%, -30%) rotateX(65deg);
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 70%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 70%);
+  pointer-events: none;
+}
+
+/* Pulse Keyframes */
+@keyframes pulse-ring {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.1); opacity: 0.3; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+@keyframes breach-alarm {
+  0%, 100% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.6), inset 0 0 15px rgba(239, 68, 68, 0.4); border-color: #ef4444; }
+  50% { box-shadow: 0 0 40px rgba(239, 68, 68, 0.9), inset 0 0 30px rgba(239, 68, 68, 0.7); border-color: #f87171; }
+}
+
+@keyframes radar-sweep {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes float-gentle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* Isometric 3D Layer Styling */
+.iso-layer {
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-style: preserve-3d;
+}
+
+.iso-layer:hover {
+  filter: brightness(1.2);
+}

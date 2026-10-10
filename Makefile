@@ -1,24 +1,29 @@
-.PHONY: help dev seed demo test clean
+.PHONY: help dev seed demo test clean test-api test-engine build-web
+
+PYTHON := .\.venv\Scripts\python.exe
 
 help:
-	@echo "AgentBreak — Commands:"
-	@echo "  make dev      - Start FastAPI backend and Next.js frontend"
-	@echo "  make seed     - Seed SQLite database from seeds/ and fixtures/"
-	@echo "  make demo     - Launch warm-start demo configuration"
-	@echo "  make test     - Run pytest across test suite"
-	@echo "  make clean    - Clean caches and temporary runtime data"
+	@echo "AgentBreak — Available Commands:"
+	@echo "  make dev         - Start FastAPI backend (port 8000) and Next.js frontend (port 3000)"
+	@echo "  make test        - Run all pytest test suites (engine + api)"
+	@echo "  make test-engine - Run engine integration tests"
+	@echo "  make test-api    - Run FastAPI endpoint tests"
+	@echo "  make build-web   - Build production Next.js frontend bundle"
 
-dev:
-	@echo "Starting development servers..."
+dev-api:
+	$(PYTHON) -m uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
 
-seed:
-	@echo "Seeding database..."
-
-demo:
-	@echo "Launching demo..."
+dev-web:
+	cd web && npm run dev
 
 test:
-	@echo "Running tests..."
+	$(PYTHON) -m pytest tests -v
 
-clean:
-	@echo "Cleaning temporary files..."
+test-engine:
+	$(PYTHON) -m pytest tests/engine -v
+
+test-api:
+	$(PYTHON) -m pytest tests/api -v
+
+build-web:
+	cd web && npm run build
