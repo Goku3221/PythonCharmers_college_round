@@ -14,7 +14,7 @@ interface Point2D {
   y: number;
 }
 
-// 3D Isometric projection math for the hero floor plane
+// 3D Isometric projection math for the full-bleed hero floor plane
 function projectIso(p: Point3D, center: Point2D, scale: number = 1): Point2D {
   const cos30 = 0.8660254; // cos(30 deg)
   const sin30 = 0.5; // sin(30 deg)
@@ -55,30 +55,86 @@ function getRoundedRectPerimeter(
 export function HeroSection({ onScrollToStack }: { onScrollToStack?: () => void }) {
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
 
-  // Satellite nodes surrounding central hub matching references/hero.png
-  // Local coordinates (x, y) relative to central hub (0, 0)
+  // Full-bleed 1920px wide canvas geometry spanning edge-to-edge
+  const canvasW = 1920;
+  const canvasH = 620;
+  const center2D: Point2D = { x: canvasW / 2, y: 310 };
+
+  // Central Hub Cube geometry (same 3D cube UI with WHITE side glow)
+  const hubSize = 64; // half-width (128px total)
+  const hubHeight = 32; // 3D vertical thickness
+  const hubRadius = 18; // rounded corners
+  const hubZ = 22; // raised elevation
+
+  // 8 Satellite nodes placed along strictly non-overlapping corridors on the isometric floor grid
+  // Every node has its own port, its own perpendicular corridor, and smooth rounded fillets ensuring ZERO overlapping!
   const satelliteNodes = [
-    { id: 'node-top-left', label: 'Cloud VPC', x: -180, y: -90, status: 'locked' },
-    { id: 'node-top-center', label: 'Identity Broker', x: 20, y: -180, status: 'locked' },
-    { id: 'node-top-right', label: 'Tool Dispatcher', x: 190, y: -90, status: 'locked' },
-    { id: 'node-far-left', label: 'Database Cluster', x: -260, y: 30, status: 'locked' },
-    { id: 'node-bottom-left', label: 'Agent Runtime', x: -140, y: 150, status: 'locked' },
-    { id: 'node-bottom-center', label: 'API Gateway', x: 20, y: 190, status: 'locked' },
-    { id: 'node-bottom-right', label: 'Endpoint Mesh', x: 180, y: 120, status: 'locked' },
+    {
+      id: 'node-top',
+      label: 'Cloud VPC',
+      hubPort: { x: -36, y: -64 }, // emerges from top-back left edge
+      corner: { x: -36, y: -180 },
+      target: { x: -180, y: -180 },
+      filletRadius: 24,
+    },
+    {
+      id: 'node-top-right',
+      label: 'Identity Broker',
+      hubPort: { x: 25, y: -64 }, // emerges from top-back right edge
+      corner: { x: 25, y: -240 },
+      target: { x: 110, y: -240 },
+      filletRadius: 24,
+    },
+    {
+      id: 'node-right',
+      label: 'Tool Dispatcher',
+      hubPort: { x: 64, y: -25 }, // emerges from top-right edge
+      corner: { x: 240, y: -25 },
+      target: { x: 240, y: -90 },
+      filletRadius: 22,
+    },
+    {
+      id: 'node-bottom-right',
+      label: 'Endpoint Mesh',
+      hubPort: { x: 64, y: 35 }, // emerges from bottom-right edge
+      corner: { x: 220, y: 35 },
+      target: { x: 220, y: 160 },
+      filletRadius: 24,
+    },
+    {
+      id: 'node-bottom',
+      label: 'API Gateway',
+      hubPort: { x: 25, y: 64 }, // emerges from bottom-front right edge
+      corner: { x: 25, y: 260 },
+      target: { x: 90, y: 260 },
+      filletRadius: 22,
+    },
+    {
+      id: 'node-bottom-left',
+      label: 'Agent Runtime',
+      hubPort: { x: -36, y: 64 }, // emerges from bottom-front left edge
+      corner: { x: -36, y: 210 },
+      target: { x: -160, y: 210 },
+      filletRadius: 24,
+    },
+    {
+      id: 'node-left',
+      label: 'Database Cluster',
+      hubPort: { x: -64, y: 30 }, // emerges from bottom-left edge
+      corner: { x: -250, y: 30 },
+      target: { x: -250, y: 80 },
+      filletRadius: 20,
+    },
+    {
+      id: 'node-far-left',
+      label: 'Policy Engine',
+      hubPort: { x: -64, y: -25 }, // emerges from top-left edge
+      corner: { x: -380, y: -25 },
+      target: { x: -380, y: 70 },
+      filletRadius: 24,
+    },
   ];
 
-  // SVG canvas geometry covering the entire lower section below the CTA
-  const canvasW = 1200;
-  const canvasH = 580;
-  const center2D: Point2D = { x: canvasW / 2, y: 290 };
-
-  // Central Hub Cube geometry (same 3D cube UI as the cube section)
-  const hubSize = 64; // half-width (128px total)
-  const hubHeight = 30; // 3D vertical thickness
-  const hubRadius = 18; // rounded corners
-  const hubZ = 20; // raised elevation
-
-  // Helper to extract a continuous perimeter slice
   const getSlice = (pts: Point2D[], startIdx: number, endIdx: number): Point2D[] => {
     const res: Point2D[] = [];
     const N = pts.length;
@@ -91,7 +147,7 @@ export function HeroSection({ onScrollToStack }: { onScrollToStack?: () => void 
     return res;
   };
 
-  // Render a thick 3D rounded cube (used for both central hub and satellite nodes)
+  // Render a thick 3D rounded cube
   const render3DCube = (
     cx: number,
     cy: number,
@@ -115,7 +171,6 @@ export function HeroSection({ onScrollToStack }: { onScrollToStack?: () => void 
     );
     const centerTop = projectIso({ x: cx, y: cy, z: topZ }, center2D);
 
-    // Find Left, Front, Right silhouette vertices
     let leftIdx = 0;
     let frontIdx = 0;
     let rightIdx = 0;
@@ -167,28 +222,31 @@ export function HeroSection({ onScrollToStack }: { onScrollToStack?: () => void 
 
     return (
       <g key={`3dcube-${cx}-${cy}`}>
-        {/* Solid 3D Left Wall */}
+        {/* Solid 3D Left Wall: White-hot emission on central block */}
         <path
           d={leftHullD}
-          fill={isCenter ? '#062d22' : '#141824'}
-          stroke={isCenter ? '#10b981' : 'rgba(255, 255, 255, 0.16)'}
-          strokeWidth="1.2"
+          fill={isCenter ? 'url(#hub-left-side-white)' : '#141824'}
+          stroke={isCenter ? '#ffffff' : 'rgba(255, 255, 255, 0.16)'}
+          strokeWidth={isCenter ? '2' : '1.2'}
+          filter={isCenter ? 'url(#white-side-glow)' : undefined}
         />
 
-        {/* Solid 3D Right Wall */}
+        {/* Solid 3D Right Wall: White-to-mint emission on central block */}
         <path
           d={rightHullD}
-          fill={isCenter ? '#032018' : '#0d1017'}
-          stroke={isCenter ? '#06b6d4' : 'rgba(255, 255, 255, 0.16)'}
-          strokeWidth="1.2"
+          fill={isCenter ? 'url(#hub-right-side-white)' : '#0d1017'}
+          stroke={isCenter ? '#ffffff' : 'rgba(255, 255, 255, 0.16)'}
+          strokeWidth={isCenter ? '2' : '1.2'}
+          filter={isCenter ? 'url(#white-side-glow)' : undefined}
         />
 
-        {/* Upper Bevel Highlight */}
+        {/* Upper Bevel Highlight: Pure bright white specular rim */}
         <path
           d={topBevelHighlightD}
           fill="none"
-          stroke={isCenter ? '#34d399' : isHovered ? '#10b981' : 'rgba(255, 255, 255, 0.35)'}
-          strokeWidth="1.5"
+          stroke={isCenter ? '#ffffff' : isHovered ? '#10b981' : 'rgba(255, 255, 255, 0.35)'}
+          strokeWidth={isCenter ? '2.8' : '1.5'}
+          filter={isCenter ? 'url(#white-hot-rim)' : undefined}
         />
 
         {/* Top Rounded Surface */}
@@ -196,7 +254,7 @@ export function HeroSection({ onScrollToStack }: { onScrollToStack?: () => void 
           d={topPathD}
           fill={isCenter ? '#0a0f16' : '#121622'}
           stroke={isCenter ? '#ffffff' : isHovered ? '#10b981' : 'rgba(255, 255, 255, 0.28)'}
-          strokeWidth={isCenter ? '1.8' : '1.2'}
+          strokeWidth={isCenter ? '2' : '1.2'}
           strokeLinejoin="round"
           filter={isCenter ? 'url(#hub-shadow)' : undefined}
         />
@@ -233,10 +291,10 @@ export function HeroSection({ onScrollToStack }: { onScrollToStack?: () => void 
         {/* Glowing Corner LED Pins */}
         {isCenter ? (
           <g>
-            <circle cx={projTop[0].x} cy={projTop[0].y} r="2.5" fill="#10b981" />
-            <circle cx={projTop[6].x} cy={projTop[6].y} r="2.5" fill="#06b6d4" />
-            <circle cx={projTop[12].x} cy={projTop[12].y} r="2.5" fill="#10b981" />
-            <circle cx={projTop[18].x} cy={projTop[18].y} r="2.5" fill="#a3e635" />
+            <circle cx={projTop[0].x} cy={projTop[0].y} r="3" fill="#ffffff" filter="url(#white-hot-rim)" />
+            <circle cx={projTop[6].x} cy={projTop[6].y} r="3" fill="#06b6d4" />
+            <circle cx={projTop[12].x} cy={projTop[12].y} r="3" fill="#ffffff" filter="url(#white-hot-rim)" />
+            <circle cx={projTop[18].x} cy={projTop[18].y} r="3" fill="#a3e635" />
           </g>
         ) : (
           <circle cx={projTop[6].x} cy={projTop[6].y} r="1.8" fill="#ff8522" />
@@ -245,32 +303,142 @@ export function HeroSection({ onScrollToStack }: { onScrollToStack?: () => void 
     );
   };
 
-  // Orthogonal circuit path (90-degree bends)
-  const renderCircuitTrace = (node: { id: string; x: number; y: number }) => {
-    const hubScreen = projectIso({ x: 0, y: 0, z: hubZ + 10 }, center2D);
-    const nodeScreen = projectIso({ x: node.x, y: node.y, z: 12 }, center2D);
-    const cornerIso = { x: node.x, y: 0, z: 0 };
-    const cornerScreen = projectIso(cornerIso, center2D);
+  // Helper to construct a smoothly rounded isometric circuit path (fillet curve at 90-deg turn in 3D grid)
+  const buildIsometricCircuitTrace = (
+    start3D: { x: number; y: number },
+    corner3D: { x: number; y: number },
+    end3D: { x: number; y: number },
+    radius: number = 22
+  ): {
+    pathD: string;
+    startPt: Point2D;
+    cornerPt: Point2D;
+    endPt: Point2D;
+  } => {
+    // Vector 1 (start to corner along isometric grid)
+    const v1x = corner3D.x - start3D.x;
+    const v1y = corner3D.y - start3D.y;
+    const len1 = Math.sqrt(v1x * v1x + v1y * v1y);
+    const u1x = len1 > 0 ? v1x / len1 : 0;
+    const u1y = len1 > 0 ? v1y / len1 : 0;
 
-    const pathD = `M ${hubScreen.x} ${hubScreen.y} L ${cornerScreen.x} ${cornerScreen.y} L ${nodeScreen.x} ${nodeScreen.y}`;
+    // Vector 2 (corner to end along orthogonal isometric grid)
+    const v2x = end3D.x - corner3D.x;
+    const v2y = end3D.y - corner3D.y;
+    const len2 = Math.sqrt(v2x * v2x + v2y * v2y);
+    const u2x = len2 > 0 ? v2x / len2 : 0;
+    const u2y = len2 > 0 ? v2y / len2 : 0;
+
+    const r = Math.min(radius, len1 * 0.45, len2 * 0.45);
+
+    // Tangent points before and after corner in (x, y) floor grid space
+    const pre3D = { x: corner3D.x - u1x * r, y: corner3D.y - u1y * r };
+    const post3D = { x: corner3D.x + u2x * r, y: corner3D.y + u2y * r };
+
+    // Project all points to 2D screen space (on floor elevation z = 0)
+    const startPt = projectIso({ x: start3D.x, y: start3D.y, z: 0 }, center2D);
+    const prePt = projectIso({ x: pre3D.x, y: pre3D.y, z: 0 }, center2D);
+    const cornerPt = projectIso({ x: corner3D.x, y: corner3D.y, z: 0 }, center2D);
+    const postPt = projectIso({ x: post3D.x, y: post3D.y, z: 0 }, center2D);
+    const endPt = projectIso({ x: end3D.x, y: end3D.y, z: 0 }, center2D);
+
+    const pathD = `M ${startPt.x.toFixed(1)} ${startPt.y.toFixed(1)} L ${prePt.x.toFixed(1)} ${prePt.y.toFixed(1)} Q ${cornerPt.x.toFixed(1)} ${cornerPt.y.toFixed(1)} ${postPt.x.toFixed(1)} ${postPt.y.toFixed(1)} L ${endPt.x.toFixed(1)} ${endPt.y.toFixed(1)}`;
+
+    return { pathD, startPt, cornerPt, endPt };
+  };
+
+  // Render a clean, non-overlapping rounded circuit trace with a high-definition pulse every 2 seconds
+  const renderCircuitTraceWith2sPulse = (node: (typeof satelliteNodes)[0]) => {
+    const { pathD, startPt, cornerPt, endPt } = buildIsometricCircuitTrace(
+      node.hubPort,
+      node.corner,
+      node.target,
+      node.filletRadius
+    );
 
     return (
-      <g key={`trace-${node.id}`}>
+      <g key={`trace-clean-${node.id}`}>
+        {/* Subtle wide ambient conduit backing */}
         <path
           d={pathD}
           fill="none"
-          stroke="rgba(255, 255, 255, 0.12)"
-          strokeWidth="1.2"
+          stroke="rgba(16, 185, 129, 0.12)"
+          strokeWidth="3.6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         />
+
+        {/* Crisp metallic circuit trace with rounded corner */}
         <path
           d={pathD}
           fill="none"
-          stroke="url(#trace-pulse-gradient)"
+          stroke="rgba(255, 255, 255, 0.22)"
           strokeWidth="1.6"
-          strokeDasharray="10 90"
-          className="animate-pulse"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         />
-        <circle cx={cornerScreen.x} cy={cornerScreen.y} r="2" fill="rgba(16, 185, 129, 0.7)" />
+
+        {/* Center Cube Port Pin: Smooth rounded terminal socket connecting to center cube */}
+        <circle cx={startPt.x} cy={startPt.y} r="3" fill="#ffffff" filter="url(#white-pulse-core)" />
+        <circle cx={startPt.x} cy={startPt.y} r="5.5" fill="none" stroke="rgba(255, 255, 255, 0.4)" strokeWidth="1" />
+
+        {/* Corner Junction Dot: Inline circuit pad */}
+        <circle cx={cornerPt.x} cy={cornerPt.y} r="2" fill="#10b981" opacity="0.8" />
+        <circle cx={cornerPt.x} cy={cornerPt.y} r="4.2" fill="none" stroke="rgba(16, 185, 129, 0.35)" strokeWidth="0.8" />
+
+        {/* Target Cube Terminal Socket */}
+        <circle cx={endPt.x} cy={endPt.y} r="3" fill="#10b981" />
+        <circle cx={endPt.x} cy={endPt.y} r="6" fill="none" stroke="rgba(16, 185, 129, 0.5)" strokeWidth="1" />
+
+        {/* High-Definition 2-Second Pulse Packet traveling from center cube to target cube */}
+        <g>
+          {/* Motion path: exactly 2s duration, repeats indefinitely */}
+          <animateMotion
+            path={pathD}
+            dur="2s"
+            repeatCount="indefinite"
+            keyTimes="0; 0.82; 1"
+            keyPoints="0; 1; 1"
+            calcMode="spline"
+            keySplines="0.25 0.1 0.25 1; 0 0 1 1"
+            rotate="auto"
+          />
+
+          {/* Smooth opacity envelope: emerges gracefully from center cube, shines intensely, dissolves at destination */}
+          <animate
+            attributeName="opacity"
+            values="0; 0.3; 1; 1; 0; 0"
+            keyTimes="0; 0.05; 0.15; 0.78; 0.85; 1"
+            dur="2s"
+            repeatCount="indefinite"
+          />
+
+          {/* Outer Emerald Radiant Halo Ring */}
+          <circle
+            r="8"
+            fill="none"
+            stroke="#10b981"
+            strokeWidth="1.8"
+            opacity="0.9"
+            filter="url(#pulse-halo-glow)"
+          />
+
+          {/* Concentric Cyan Energy Ring */}
+          <circle
+            r="5"
+            fill="none"
+            stroke="#06b6d4"
+            strokeWidth="1.4"
+            opacity="0.95"
+          />
+
+          {/* Trailing Comet Energy Particles (orient along motion tangent) */}
+          <ellipse cx="-4.5" cy="0" rx="4" ry="2" fill="#34d399" opacity="0.75" />
+          <circle cx="-8" cy="0" r="1.5" fill="#06b6d4" opacity="0.5" />
+
+          {/* Ultra-Bright White-Hot Core Bead */}
+          <circle r="3.6" fill="#ffffff" filter="url(#white-pulse-core)" />
+        </g>
       </g>
     );
   };
@@ -297,10 +465,10 @@ export function HeroSection({ onScrollToStack }: { onScrollToStack?: () => void 
           top: '-15%',
           left: '50%',
           transform: 'translateX(-50%)',
-          width: '1200px',
-          height: '700px',
+          width: '1400px',
+          height: '750px',
           background:
-            'radial-gradient(ellipse at 50% 30%, rgba(16, 185, 129, 0.14) 0%, rgba(6, 78, 59, 0.08) 45%, rgba(8, 9, 10, 0) 75%)',
+            'radial-gradient(ellipse at 50% 30%, rgba(16, 185, 129, 0.15) 0%, rgba(6, 78, 59, 0.08) 45%, rgba(8, 9, 10, 0) 75%)',
           pointerEvents: 'none',
           zIndex: 0,
         }}
@@ -355,7 +523,7 @@ export function HeroSection({ onScrollToStack }: { onScrollToStack?: () => void 
           that all parts of your system work together effectively.
         </p>
 
-        {/* Single Primary CTA Button (Talk to a specialist removed) */}
+        {/* Single Primary CTA Button */}
         <div>
           <button
             onClick={onScrollToStack}
@@ -390,91 +558,136 @@ export function HeroSection({ onScrollToStack }: { onScrollToStack?: () => void 
         </div>
       </div>
 
-      {/* FULL-BLEED 3D ISOMETRIC GRID & 3D CUBES (covers entire section below CTA till bottom) */}
+      {/* FULL-WIDTH EDGE-TO-EDGE 3D ISOMETRIC PLANE (Extends 100vw from left to right) */}
       <div
         style={{
           position: 'relative',
-          width: '100%',
-          height: '580px',
+          width: '100vw',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          height: '620px',
           marginTop: '10px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          overflow: 'hidden',
         }}
       >
         <svg
-          width={canvasW}
-          height={canvasH}
+          width="100%"
+          height="100%"
           viewBox={`0 0 ${canvasW} ${canvasH}`}
-          style={{ width: '100%', height: '100%', overflow: 'visible' }}
+          preserveAspectRatio="xMidYMid slice"
+          style={{ width: '100%', height: '100%', display: 'block' }}
         >
           <defs>
-            {/* Radiant Mint/Cyan Bloom Glow underneath the central 3D cube hub */}
+            {/* RADIAL FADE MASK FOR THE GRID: Strongest at center, smoothly fading outwards */}
+            <radialGradient id="grid-radial-fade-grad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
+              <stop offset="25%" stopColor="#ffffff" stopOpacity="0.9" />
+              <stop offset="55%" stopColor="#ffffff" stopOpacity="0.45" />
+              <stop offset="80%" stopColor="#ffffff" stopOpacity="0.15" />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+            </radialGradient>
+            <mask id="grid-fade-mask" maskUnits="userSpaceOnUse" x="0" y="0" width={canvasW} height={canvasH}>
+              <rect x="0" y="0" width={canvasW} height={canvasH} fill="url(#grid-radial-fade-grad)" />
+            </mask>
+
+            {/* Radiant Mint/Cyan Bloom Glow with WHITE-HOT CENTER underneath central hub */}
             <radialGradient id="hub-bloom-glow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#10b981" stopOpacity="0.85" />
-              <stop offset="35%" stopColor="#06b6d4" stopOpacity="0.5" />
-              <stop offset="70%" stopColor="#059669" stopOpacity="0.18" />
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.95" />
+              <stop offset="20%" stopColor="#34d399" stopOpacity="0.85" />
+              <stop offset="45%" stopColor="#06b6d4" stopOpacity="0.55" />
+              <stop offset="75%" stopColor="#059669" stopOpacity="0.2" />
               <stop offset="100%" stopColor="#08090a" stopOpacity="0" />
             </radialGradient>
 
-            {/* Trace pulse gradient */}
-            <linearGradient id="trace-pulse-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#06b6d4" />
-              <stop offset="50%" stopColor="#10b981" />
-              <stop offset="100%" stopColor="#a3e635" />
+            {/* White-Hot Side Views Gradients for the main isometric block */}
+            <linearGradient id="hub-left-side-white" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.98" />
+              <stop offset="35%" stopColor="#a7f3d0" stopOpacity="0.9" />
+              <stop offset="70%" stopColor="#10b981" stopOpacity="0.85" />
+              <stop offset="100%" stopColor="#064e3b" stopOpacity="0.95" />
             </linearGradient>
 
-            {/* Hub Drop Shadow */}
+            <linearGradient id="hub-right-side-white" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.95" />
+              <stop offset="40%" stopColor="#6ee7b7" stopOpacity="0.88" />
+              <stop offset="75%" stopColor="#059669" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#022c22" stopOpacity="0.95" />
+            </linearGradient>
+
+            {/* Glowing Filters */}
+            <filter id="white-side-glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="#ffffff" floodOpacity="0.65" />
+              <feDropShadow dx="0" dy="0" stdDeviation="12" floodColor="#10b981" floodOpacity="0.5" />
+            </filter>
+
+            <filter id="white-hot-rim" x="-50%" y="-50%" width="200%" height="200%">
+              <feDropShadow dx="0" dy="0" stdDeviation="4" floodColor="#ffffff" floodOpacity="0.9" />
+            </filter>
+
             <filter id="hub-shadow" x="-50%" y="-50%" width="200%" height="200%">
-              <feDropShadow dx="0" dy="10" stdDeviation="18" floodColor="#10b981" floodOpacity="0.55" />
+              <feDropShadow dx="0" dy="12" stdDeviation="22" floodColor="#10b981" floodOpacity="0.6" />
+            </filter>
+
+            {/* High-Definition 2s Pulse Glow Filters */}
+            <filter id="white-pulse-core" x="-100%" y="-100%" width="300%" height="300%">
+              <feDropShadow dx="0" dy="0" stdDeviation="3.2" floodColor="#ffffff" floodOpacity="1" />
+              <feDropShadow dx="0" dy="0" stdDeviation="7" floodColor="#34d399" floodOpacity="0.85" />
+            </filter>
+
+            <filter id="pulse-halo-glow" x="-100%" y="-100%" width="300%" height="300%">
+              <feDropShadow dx="0" dy="0" stdDeviation="5.5" floodColor="#10b981" floodOpacity="0.8" />
             </filter>
           </defs>
 
-          {/* Full-Bleed Isometric Ground Floor Grid (covers entire lower viewport) */}
-          <g opacity="0.9">
-            {[-480, -360, -240, -120, 0, 120, 240, 360, 480].map((step, i) => {
-              const start1 = projectIso({ x: step, y: -340, z: 0 }, center2D);
-              const end1 = projectIso({ x: step, y: 340, z: 0 }, center2D);
-              const start2 = projectIso({ x: -480, y: step * 0.7, z: 0 }, center2D);
-              const end2 = projectIso({ x: 480, y: step * 0.7, z: 0 }, center2D);
+          {/* FULL-BLEED GROUND GRID: Extends from extreme left to extreme right, masked to fade from center */}
+          <g mask="url(#grid-fade-mask)">
+            {/* Horizontal & Diagonal isometric grid lines spanning full width */}
+            {[-900, -750, -600, -450, -300, -150, 0, 150, 300, 450, 600, 750, 900].map((step, i) => {
+              const start1 = projectIso({ x: step, y: -500, z: 0 }, center2D);
+              const end1 = projectIso({ x: step, y: 500, z: 0 }, center2D);
+              const start2 = projectIso({ x: -900, y: step * 0.7, z: 0 }, center2D);
+              const end2 = projectIso({ x: 900, y: step * 0.7, z: 0 }, center2D);
               return (
-                <g key={`iso-grid-${i}`}>
+                <g key={`iso-grid-span-${i}`}>
                   <line
                     x1={start1.x}
                     y1={start1.y}
                     x2={end1.x}
                     y2={end1.y}
-                    stroke="rgba(255, 255, 255, 0.05)"
-                    strokeWidth="0.9"
+                    stroke="rgba(255, 255, 255, 0.16)"
+                    strokeWidth="1"
                   />
                   <line
                     x1={start2.x}
                     y1={start2.y}
                     x2={end2.x}
                     y2={end2.y}
-                    stroke="rgba(255, 255, 255, 0.05)"
-                    strokeWidth="0.9"
+                    stroke="rgba(255, 255, 255, 0.16)"
+                    strokeWidth="1"
                   />
                 </g>
               );
             })}
           </g>
 
-          {/* Central Radial Light Bloom underneath the 3D hub */}
+          {/* Central Radial Light Bloom underneath the 3D hub with WHITE-HOT core */}
           <ellipse
             cx={projectIso({ x: 0, y: 0, z: 0 }, center2D).x}
-            cy={projectIso({ x: 0, y: 0, z: 0 }, center2D).y + 16}
-            rx="200"
-            ry="115"
+            cy={projectIso({ x: 0, y: 0, z: 0 }, center2D).y + 18}
+            rx="230"
+            ry="130"
             fill="url(#hub-bloom-glow)"
           />
 
-          {/* Orthogonal Circuit Traces (90-degree bends) */}
-          {satelliteNodes.map((node) => renderCircuitTrace(node))}
+          {/* Clean, Non-Overlapping Circuit Traces with 2-Second Pulses traveling from center outward */}
+          {satelliteNodes.map((node) => renderCircuitTraceWith2sPulse(node))}
 
-          {/* Connected 3D Satellite Cubes around the perimeter with Radar Pulses */}
+          {/* Connected 3D Satellite Cubes around the perimeter with Radar Beacon Pulses */}
           {satelliteNodes.map((node) => {
-            const centerScreen = projectIso({ x: node.x, y: node.y, z: 12 }, center2D);
+            const centerScreen = projectIso({ x: node.target.x, y: node.target.y, z: 24 }, center2D);
             const isHovered = hoveredNodeId === node.id;
             return (
               <g
@@ -484,35 +697,48 @@ export function HeroSection({ onScrollToStack }: { onScrollToStack?: () => void 
                 onMouseEnter={() => setHoveredNodeId(node.id)}
                 onMouseLeave={() => setHoveredNodeId(null)}
               >
-                {/* Active radar beacon pulse around satellite 3D cube */}
-                <circle
-                  cx={centerScreen.x}
-                  cy={centerScreen.y}
-                  r="30"
-                  fill="none"
-                  stroke="#10b981"
-                  strokeWidth="1.2"
-                  opacity="0.55"
-                  className="animate-ping"
-                />
+                {/* Active radar beacon pulse expanding synchronously every 2 seconds */}
                 <circle
                   cx={centerScreen.x}
                   cy={centerScreen.y}
                   r="20"
                   fill="none"
-                  stroke="rgba(16, 185, 129, 0.35)"
+                  stroke="#10b981"
                   strokeWidth="1.4"
+                >
+                  <animate
+                    attributeName="r"
+                    values="16; 34"
+                    keyTimes="0; 1"
+                    dur="2s"
+                    repeatCount="indefinite"
+                  />
+                  <animate
+                    attributeName="opacity"
+                    values="0.75; 0"
+                    keyTimes="0; 1"
+                    dur="2s"
+                    repeatCount="indefinite"
+                  />
+                </circle>
+                <circle
+                  cx={centerScreen.x}
+                  cy={centerScreen.y}
+                  r="18"
+                  fill="none"
+                  stroke="rgba(16, 185, 129, 0.4)"
+                  strokeWidth="1.2"
                 />
 
                 {/* Solid 3D Rounded Cube for the satellite node */}
                 {render3DCube(
-                  node.x,
-                  node.y,
-                  26, // half-width (52px footprint)
-                  26, // half-depth (52px footprint)
-                  18, // 3D extruded height
-                  8, // rounded corner radius
-                  6, // base elevation
+                  node.target.x,
+                  node.target.y,
+                  26,
+                  26,
+                  18,
+                  8,
+                  6,
                   false,
                   node.label,
                   isHovered
@@ -521,16 +747,16 @@ export function HeroSection({ onScrollToStack }: { onScrollToStack?: () => void 
             );
           })}
 
-          {/* ELEVATED CENTRAL THICK 3D CUBE HUB (matching the cube section's 3D architecture) */}
+          {/* ELEVATED CENTRAL THICK 3D CUBE HUB WITH WHITE-HOT SIDE EMISSION */}
           {render3DCube(
             0,
             0,
-            hubSize, // 64 half-width (128px footprint)
-            hubSize, // 64 half-depth (128px footprint)
-            hubHeight, // 30px substantial 3D vertical thickness
-            hubRadius, // 18px smooth rounded corners
-            hubZ, // elevated 3D height
-            true // is center hub
+            hubSize,
+            hubSize,
+            hubHeight,
+            hubRadius,
+            hubZ,
+            true
           )}
         </svg>
       </div>
