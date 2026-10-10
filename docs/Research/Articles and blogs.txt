@@ -1,0 +1,91 @@
+1. Amazon ATA
+The system deploys two primary categories of agents that work in adversarial coordination. Red-team agents simulate adversary techniques, attempting to execute various attack methods against test infrastructure. Blue-team agents validate detection coverage, analyzing whether existing security rules can identify the techniques executed by red-team agents, and automatically generating new or improved detection rules when gaps are discovered.
+
+The workflow orchestration is built around specialized subgraphs that handle different aspects of the testing cycle. One subgraph manages rule generation, where blue-team agents analyze security telemetry and develop new detection logic. Another subgraph handles technique execution, where red-team agents implement and validate attack methods. These subgraphs can operate concurrently, with the system capable of executing ten to thirty technique variations simultaneously, demonstrating the scalability of the architecture.
+
+Human oversight remains a critical component of the production workflow despite the high degree of automation. While ATA can generate and validate detection rules autonomously, human security professionals must approve all changes before deployment to production. This human-in-the-loop design balances the efficiency gains of automation with the need for expert judgment in security-critical decisions. 
+
+2. microsoft azure- red teaming agent :
+The AI Red Teaming Agent leverages Microsoft's open-source framework for Python Risk Identification Tool's (PyRIT) AI red teaming capabilities along with Microsoft Foundry's Risk and Safety Evaluations to help you automatically assess safety issues in three ways:
+
+Automated scans for content risks: Firstly, you can automatically scan your model and application endpoints for safety risks by simulating adversarial probing.
+Evaluate probing success: Next, you can evaluate and score each attack-response pair to generate insightful metrics such as Attack Success Rate (ASR).
+Reporting and logging Finally, you can generate a score card of the attack probing techniques and risk categories to help you decide if the system is ready for deployment. Findings can be logged, monitored, and tracked over time directly in Foundry, ensuring compliance and continuous risk mitigation.
+Together these components (scanning, evaluating, and reporting) help teams understand how AI systems respond to common attacks, ultimately guiding a comprehensive risk management strategy.
+
+Supported attack strategies
+The following attack strategies are supported in the AI Red Teaming Agent from PyRIT:
+
+Attack Strategy        Description
+AnsiAttack        Utilizes ANSI escape sequences to manipulate text appearance and behavior.
+AsciiArt        Generates visual art using ASCII characters, often used for creative or obfuscation purposes.
+AsciiSmuggler        Conceals data within ASCII characters, making it harder to detect.
+Atbash        Implements the Atbash cipher, a simple substitution cipher where each letter is mapped to its reverse.
+Base64        Encodes binary data into a text format using Base64, commonly used for data transmission.
+Binary        Converts text into binary code, representing data in a series of 0s and 1s.
+Caesar        Applies the Caesar cipher, a substitution cipher that shifts characters by a fixed number of positions.
+CharacterSpace        Alters text by adding spaces between characters, often used for obfuscation.
+CharSwap        Swaps characters within text to create variations or obfuscate the original content.
+Diacritic        Adds diacritical marks to characters, changing their appearance and sometimes their meaning.
+Flip        Flips characters from front to back, creating a mirrored effect.
+Leetspeak        Transforms text into Leetspeak, a form of encoding that replaces letters with similar-looking numbers or symbols.
+Morse        Encodes text into Morse code, using dots and dashes to represent characters.
+ROT13        Applies the ROT13 cipher, a simple substitution cipher that shifts characters by 13 positions.
+SuffixAppend        Appends an adversarial suffix to the prompt
+StringJoin        Joins multiple strings together, often used for concatenation or obfuscation.
+UnicodeConfusable        Uses Unicode characters that look similar to standard characters, creating visual confusion.
+UnicodeSubstitution        Substitutes standard characters with Unicode equivalents, often for obfuscation.
+Url        Encodes text into URL format
+Jailbreak        Injects specially crafted prompts to bypass AI safeguards, known as User Injected Prompt Attacks (UPIA).
+Indirect Jailbreak        Injects attack prompts in tool outputs or returned context to by pass AI safeguards indirectly, known as Indirect Prompt Injection Attacks.
+Tense        Changes the tense of text, specifically converting it into past tense.
+Multi turn        Executes attacks across multiple conversational turns, using context accumulation to bypass safeguards or elicit unintended behaviors.
+Crescendo        Gradually escalates the complexity or risk of prompts over successive turns, probing for weaknesses in agent defenses through incremental challenge.
+Known limitations of AI Red Teaming Agent
+AI Red Teaming Agent has several important limitations to consider when running and interpreting red teaming results.
+
+Red teaming runs simulate scenarios in which a Foundry agent is exposed to sensitive data or attack vehicle data directly. Since this data is all synthetic, this isn't representative of real world data distributions.
+Mock tools are only currently enabled to retrieve synthetic data and enable red teaming evaluations. They don't currently support mocking behaviors, which would enable testing closer to real sandboxing than what is currently supported.
+Due to lack of completely locked-down sandboxing support, the adversarial nature of our red teaming evaluations is controlled to avoid real world impact.
+Red teaming runs only represent adversarial population and don't include any observational population.
+Red teaming runs use generative models to evaluate Attack Success Rates (ASR) and can be non-deterministic, non-predictive. Therefore, there's always a chance of false positives and we always recommend reviewing results before taking mitigation actions.
+
+3. Promptfoo 
+
+How LLM red teaming works
+The process of red teaming LLMs generally requires some degree of automation for a comprehensive evaluation. This is because LLMs have such a wide attack surface and are stochastic in nature (i.e. they are not consistent from one generation to the next).
+
+A systematic approach looks like this:
+
+Generate Adversarial Inputs: Create or curate a diverse set of malicious intents targeting potential vulnerabilities. For each intent, wrap it in a prompt that attempts to exploit the target. You can incorporate methods like prompt injection and jailbreaking at this step.
+
+Evaluate Responses: Run these inputs through your LLM application to observe the model's behavior. This step is a great candidate for automation.
+
+Analyze Vulnerabilities: Evaluate the LLM's outputs automatically using deterministic and model-graded metrics, and examine the responses to identify weaknesses or undesirable behaviors.
+
+Once a process is set up, it can be applied in two primary ways:
+
+One-off runs: Generate a comprehensive report that allows you to examine vulnerabilities and suggested mitigations.
+CI/CD integration: Continuously monitor for vulnerabilities in your deployment pipeline, ensuring ongoing safety as your application evolves.
+
+4. learn programming blog 
+
+Summary Table
+Track        Skill Level        Focus Areas        Example Attack Types
+Track 1: Classic        Beginner        
+Known “GenAI Red Teaming” harms
+Further study of fundamental LLM vulnerabilities
+CBRNE: Misuse of LLMs for generating harmful chemical, biological, radiological, nuclear, or explosive content
+Misinformation: Large-scale manipulation of public perception
+Harmful language and hate speech
+Track 2: Agents        Intermediate        
+Focus on “agentic” LLMs with access to external tools
+Real-world impacts of LLMs beyond mere text output
+Real-world embodied LLMs: Humanoid robots or systems tricked into harmful physical actions
+Software development agents: Manipulated to create malicious code
+Internet search agents: Exploited to gather harmful information or actions
+Track 3: Future Attacks        Advanced        
+Cutting-edge threats difficult to foresee
+Vectors emerging from rapidly evolving GenAI capabilities
+AI Virus: Intelligent, adaptive malware that leverages LLM APIs to evolve in real time
+GenAI-Integrated Command & Control Systems: Vulnerabilities in GenAI-driven C2 infrastructure, potentially basing decisions on untrusted data

@@ -1,0 +1,37 @@
+AgentBreak : The Autonomous Al
+Red Team
+
+Backstory:
+AI agents are increasingly being trusted with tools, private records, external
+services, and multi-step decision-making. However, these capabilities introduce
+new security risks. A malicious instruction hidden inside a document, a poorly
+configured tool permission, or a vulnerability in an agent's memory can cause it
+to perform actions beyond its intended purpose. Traditional security testing
+often relies on predefined attack scenarios, making it difficult to uncover
+complex vulnerabilities that emerge as an agent interacts with its environment.
+
+Problem Statement:
+Build AgentBreak, an autonomous AI security testing platform that actively
+probes AI agents to discover exploitable vulnerabilities in their instructions,
+memory, retrieved content, tool permissions, and multi-step execution. The
+platform must generate reproducible attack traces, demonstrate vulnerabilities
+within a controlled sandbox, and evaluate whether security defenses can
+prevent the same attacks without breaking legitimate agent functionality.
+
+Key Features:
+. Autonomous Attack Discovery: Identify vulnerabilities through adaptive
+adversarial testing rather than relying exclusively on predefined attack
+cases.
+. Multi-Stage Attack Analysis: Trace how malicious inputs, retrieved
+instructions, and agent decisions can combine to produce unauthorized
+actions.
+. Tool and Permission Auditing: Detect situations where an agent can access
+data or execute actions beyond its intended permissions.
+. Reproducible Attack Traces: Record the inputs, intermediate decisions, tool
+calls, and outcomes required to reproduce a discovered vulnerability.
+. Defense Validation: Evaluate proposed mitigations against previously
+successful attacks and measure whether they prevent exploitation.
+. Security Evaluation Dashboard: Visualize attack paths, vulnerability
+severity, exploit success rates, and defense effectiveness.
+. Regression Testing: Check whether security improvements introduce new
+vulnerabilities or interfere with legitimate agent behavior.
