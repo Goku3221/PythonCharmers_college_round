@@ -1,0 +1,11 @@
+# Person A: Engine & Sandbox requirements
+pydantic>=2.7.0
+google-genai>=1.0.0
+e2b-code-interpreter>=1.0.0
+python-dotenv>=1.0.0
+langfuse>=2.30.0
+langgraph>=0.2.0
+agentdojo>=0.1.35
+fastapi>=0.110.0
+uvicorn>=0.28.0
+pytest>=8.0.0
